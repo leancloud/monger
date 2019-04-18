@@ -43,6 +43,7 @@
             [monger.conversion :refer :all]
             [monger.operators :refer :all])
   (:import [com.mongodb DB DBCollection DBObject DBCursor ReadPreference]
+           [java.util.concurrent TimeUnit]
            java.util.List))
 
 
@@ -96,6 +97,7 @@
            snapshot
            read-preference
            keywordize-fields
+           max-time-ms
            options]
     :or { limit 0 batch-size 256 skip 0 } }]
   (with-open [cursor (doto (.find collection (to-db-object query) (as-field-selector fields))
@@ -107,6 +109,8 @@
       (.snapshot cursor))
     (when hint
       (.hint cursor (to-db-object hint)))
+    (when max-time-ms
+      (.maxTime cursor max-time-ms TimeUnit/MILLISECONDS))
     (when read-preference
       (.setReadPreference cursor read-preference))
     (when options
@@ -165,6 +169,10 @@
 (defn paginate
   [m & { :keys [page per-page] :or { page 1 per-page 10 } }]
   (merge m { :limit per-page :skip (monger.internal.pagination/offset-for page per-page) }))
+
+(defn max-time
+  [m ^Long max-time-ms]
+  (merge m {:max-time-ms max-time-ms}))
 
 (defmacro with-collection
   [db coll & body]
