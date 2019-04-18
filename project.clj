@@ -1,4 +1,4 @@
-(defproject com.novemberain/monger "3.1.1-SNAPSHOT"
+(defproject cn.leancloud/monger "3.1.1-maxTime"
   :description "Monger is a Clojure MongoDB client for a more civilized age: friendly, flexible and with batteries included"
   :url "http://clojuremongodb.info"
   :min-lein-version "2.5.1"
@@ -53,9 +53,9 @@
              :dev2 {:resource-paths ["test/resources"]
                     :dependencies  [[clj-time "0.8.0"               :exclusions [org.clojure/clojure]]]}}
   :aliases {"all" ["with-profile" "dev:dev,1.6:dev,1.8:dev,dj02x"]}
-  :repositories {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
+  :repositories {"sonatype" {:url "https://oss.sonatype.org/content/repositories/releases"
                              :snapshots false
                              :releases {:checksum :fail :update :always}}
-                 "sonatype-snapshots" {:url "http://oss.sonatype.org/content/repositories/snapshots"
+                 "sonatype-snapshots" {:url "https://oss.sonatype.org/content/repositories/snapshots"
                                        :snapshots true
                                        :releases {:checksum :fail :update :always}}})

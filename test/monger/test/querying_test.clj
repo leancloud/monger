@@ -1,6 +1,7 @@
 (ns monger.test.querying-test
   (:refer-clojure :exclude [select find sort])
-  (:import  [com.mongodb WriteResult WriteConcern DBObject ReadPreference]
+  (:import  [com.mongodb WriteResult WriteConcern DBObject ReadPreference
+             MongoExecutionTimeoutException]
             org.bson.types.ObjectId
             java.util.Date)
   (:require [monger.core :as mg]
@@ -22,10 +23,12 @@
     (mc/remove db "things")
     (mc/remove db "locations")
     (mc/remove db "querying_docs")
+    (mc/remove db "querying_timeout")
     (f)
     (mc/remove db "docs")
     (mc/remove db "things")
     (mc/remove db "locations")
+    (mc/remove db "querying_timeout")
     (mc/remove db "querying_docs"))
 
   (use-fixtures :each purge-collections)
@@ -161,7 +164,7 @@
           doc3 { :language "Scala"   :_id (ObjectId.) :inception_year 2003 }
           _    (mc/insert-batch db coll [doc1 doc2 doc3])]
       (are [doc, result]
-        (= doc, result)
+          (= doc, result)
         (doc2 (with-collection db coll
                 (find { :inception_year { "$lt"  2000 } })))
         (doc2 (with-collection db coll
@@ -322,4 +325,17 @@
       ;; documents have fields as strings,
       ;; not keywords
       (is (= (map #(% "name") result)
-             (map #(% :name) [ca-doc tx-doc ny-doc]))))))
+             (map #(% :name) [ca-doc tx-doc ny-doc])))))
+
+  (deftest query-with-max-time
+    (let [coll "querying_timeout"
+          doc { :_id (ObjectId.) :title (rand-int 123456) :tags (vec (map str (range 1 654321))) }
+          -    (mc/insert-batch db coll [doc])]
+      (is (thrown? MongoExecutionTimeoutException
+                   (->> (with-collection db coll
+                          (find {:tags "4320"})
+                          (limit 5)
+                          (sort { :title 1 })
+                          (max-time 1))
+                        doall))))))
+
